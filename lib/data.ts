@@ -2,6 +2,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { connectToDatabase } from "./mongodb";
 import Prompt from "@/models/Prompt";
 
@@ -34,7 +35,7 @@ export async function getPrompts(search?: string) {
 }
 
 // ADD a new prompt
-export async function addPrompt(formData: FormData) {
+export async function addPrompt(formData: FormData): Promise<void> {
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const category = formData.get("category") as string;
@@ -46,7 +47,7 @@ export async function addPrompt(formData: FormData) {
 
   await connectToDatabase();
 
-  const newPrompt = await Prompt.create({
+  await Prompt.create({
     title,
     content,
     category,
@@ -54,11 +55,7 @@ export async function addPrompt(formData: FormData) {
 
   // Revalidate the homepage so it shows the new data instantly
   revalidatePath("/");
-
-  return {
-    id: newPrompt._id.toString(),
-    title: newPrompt.title,
-    content: newPrompt.content,
-    category: newPrompt.category,
-  };
+  
+  // Redirect to homepage after successful save
+  redirect("/");
 }
